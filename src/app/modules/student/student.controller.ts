@@ -1,9 +1,20 @@
 import { Request, Response } from 'express';
-import { StudentServices } from './student.service';
+import studentValidationSchema from './student.joi.validation';
+import { StudentServices } from './student.services';
 
 const createStudent = async (req: Request, res: Response) => {
   try {
     const { student } = req.body;
+    const { error } = studentValidationSchema.validate(student);
+
+    if (error) {
+      res.status(500).json({
+        success: false,
+        message: error.details[0].message,
+        error: error.details,
+      });
+    }
+
     const result = await StudentServices.createStudent(student);
 
     res.status(201).json({
@@ -11,8 +22,12 @@ const createStudent = async (req: Request, res: Response) => {
       message: 'Student has created successfully',
       data: result,
     });
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      data: error,
+    });
   }
 };
 
@@ -25,8 +40,12 @@ const getAllStudents = async (req: Request, res: Response) => {
       message: 'Students are retrieved successfully',
       data: result,
     });
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      data: error,
+    });
   }
 };
 
@@ -40,8 +59,12 @@ const getAStudent = async (req: Request, res: Response) => {
       message: 'Student data retrieved successfully',
       data: result,
     });
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      data: error,
+    });
   }
 };
 
