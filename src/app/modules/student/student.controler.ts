@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { StudentServices } from './student.service';
+import { StudentServices } from './student.services';
 
 const createStudent = async (req: Request, res: Response) => {
   try {
