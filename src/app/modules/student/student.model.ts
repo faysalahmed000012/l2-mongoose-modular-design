@@ -1,7 +1,4 @@
-import bcrypt from 'bcrypt';
 import { model, Schema } from 'mongoose';
-import validator from 'validator';
-import config from '../../config';
 import {
   StudentMethod,
   studentModel,
@@ -16,13 +13,6 @@ const userNameSchema = new Schema<TUserName>({
     type: String,
     required: [true, 'First name is required'],
     maxlength: [20, 'firstName can not be more than 20 characters'],
-    validate: {
-      validator: function (value: String) {
-        const firstNameStr = value.charAt(0).toUpperCase + value.slice(1);
-        return firstNameStr === value;
-      },
-      message: '{VALUE} is not capitalized format',
-    },
   },
   middleName: {
     type: String,
@@ -30,12 +20,6 @@ const userNameSchema = new Schema<TUserName>({
   lastName: {
     type: String,
     required: [true, 'Last name is required'],
-    validate: {
-      validator: function (value: string) {
-        return validator.isAlpha(value);
-      },
-      message: '{VALUE} is not valid',
-    },
   },
 });
 
@@ -93,6 +77,12 @@ const studentSchema = new Schema<TStudent, studentModel, StudentMethod>(
       required: [true, 'Password is required'],
       maxlength: [20, 'Password can not be more than 20 characters'],
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      required: [true, 'User id is required'],
+      unique: true,
+      ref: 'User',
+    },
     name: {
       type: userNameSchema,
       required: [true, 'Name is required'],
@@ -144,11 +134,7 @@ const studentSchema = new Schema<TStudent, studentModel, StudentMethod>(
       required: [true, 'Local guardian information is required'],
     },
     profileImg: { type: String },
-    isActive: {
-      type: String,
-      enum: ['active', 'blocked'],
-      default: 'active',
-    },
+
     isDeleted: {
       type: Boolean,
       default: false,
@@ -164,24 +150,6 @@ const studentSchema = new Schema<TStudent, studentModel, StudentMethod>(
 // virtuals
 studentSchema.virtual('fullName').get(function () {
   return `${this.name.firstName} ${this.name.middleName} ${this.name.lastName}`;
-});
-
-// pre save middleware / hook : will work on create() save()
-studentSchema.pre('save', async function (next) {
-  // console.log(this, 'pre hook: we will save data');
-  // hashing password
-  const user = this;
-  user.password = await bcrypt.hash(
-    user.password,
-    Number(config.bcrypt_salt_rounds),
-  );
-  next();
-});
-
-// post middleware / hook
-studentSchema.post('save', function (doc, next) {
-  doc.password = '';
-  next();
 });
 
 // query middleware
